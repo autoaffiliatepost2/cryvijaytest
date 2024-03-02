@@ -195,10 +195,15 @@ router.get('/buySellApi', async function (req, res) {
           let params = {
             stop_px: Number(req.query?.trigger_price),
             close_on_trigger: true,
+            marginMode: req.query?.margin_mode =='isolated' ? 'isolated' :'cross'
           };
           order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
         }else{
-          order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price) : await bybitClient1.createOrder(symbol, type, side, quantity, price);
+          let params = {
+            marginMode: req.query?.margin_mode =='isolated' ? 'isolated' :'cross'
+          };
+          order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
+          // order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price) : await bybitClient1.createOrder(symbol, type, side, quantity, price);
         }
         
         return order;
