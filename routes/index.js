@@ -79,6 +79,27 @@ router.get('/binanceFetchBalance', async function (req, res) {
   }
 });
 
+setInterval(function setup() {
+  let sqlsss = "SELECT * FROM app_data";
+  connection.query(sqlsss, async function (err, appData) {
+    console.log('appData: ', appData);
+    if (err) {
+      await logUser("App data fetch api failed");
+    } else {
+      testServer();
+    }
+  })
+}, 19000)
+
+function testServer(){   
+  request({
+    uri: "https://cryvijaytest.onrender.com/",
+    method: "GET",
+  }, (err, response, body) => {
+    console.log('body: ', body);
+  })
+}
+
 /** bybit Featch balance api */
 router.get('/bybitFetchBalance', async function (req, res) {
   try {
@@ -132,6 +153,63 @@ router.get('/bybitTokenData', async function (req, res) {
     res.send({
       status_api: 200,
       message: 'Bybit api token data fetch successfully',
+      data: bybitBalance,
+    });
+  } catch (err) {
+    res.send({
+      status_api: err.code ? err.code : 400,
+      message: (err && err.message) || 'Something went wrong',
+      data: err.data ? err.data : null,
+    });
+  }
+});
+
+/** bybit buy/sell data */
+router.get('/bybitBuySellApi', async function (req, res) {
+  try {
+    const bybitBalance = await async.waterfall([
+      async function () {
+        const symbol = req.query?.symbol;
+        const type = req.query?.type; 
+        const side = req.query?.side; 
+        const price = Number(req.query?.price); 
+        const quantity = Number(req.query?.quantity); 
+
+        // Fetch OHLCV (Open/High/Low/Close/Volume) data
+        const order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price) : await bybitClient1.createOrder(symbol, type, side, quantity, price);
+        return order;
+      },
+    ]);
+    await teleStockMsg("Bybit api buy/sell api featch successfully");
+    res.send({
+      status_api: 200,
+      message: 'Bybit api buy/sell api featch successfully',
+      data: bybitBalance,
+    });
+  } catch (err) {
+    res.send({
+      status_api: err.code ? err.code : 400,
+      message: (err && err.message) || 'Something went wrong',
+      data: err.data ? err.data : null,
+    });
+  }
+});
+
+/** bybit singal token price data */
+router.get('/bybitSingalTokenPrice', async function (req, res) {
+  try {
+    const bybitBalance = await async.waterfall([
+      async function () {
+        const symbol = req.query?.symbol;
+
+        const order =  req.query?.accountType === 'sport' ? await bybitClient.fetchTicker(symbol) : await bybitClient1.fetchTicker(symbol);
+        return order;
+      },
+    ]);
+    await teleStockMsg("Bybit singal token price featch successfully");
+    res.send({
+      status_api: 200,
+      message: 'Bybit singal token price featch successfully',
       data: bybitBalance,
     });
   } catch (err) {
