@@ -126,7 +126,7 @@ router.get('/bybitFetchBalance', async function (req, res) {
 });
 
 /** bybit api token data */
-router.get('/bybitTokenData', async function (req, res) {
+router.get('/historical-data', async function (req, res) {
   try {
     const bybitBalance = await async.waterfall([
       async function () {
@@ -165,7 +165,7 @@ router.get('/bybitTokenData', async function (req, res) {
 });
 
 /** bybit buy/sell data */
-router.get('/bybitBuySellApi', async function (req, res) {
+router.get('/buySellApi', async function (req, res) {
   try {
     const bybitBalance = await async.waterfall([
       async function () {
@@ -196,7 +196,7 @@ router.get('/bybitBuySellApi', async function (req, res) {
 });
 
 /** bybit singal token price data */
-router.get('/bybitSingalTokenPrice', async function (req, res) {
+router.get('/marketQuotesLTP', async function (req, res) {
   try {
     const bybitBalance = await async.waterfall([
       async function () {
