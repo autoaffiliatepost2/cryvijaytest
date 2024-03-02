@@ -36,15 +36,15 @@ router.get('/', function (req, res, next) {
 // spread: 0.2,
 // tickInterval: 2000
 // };
-const binanceClient = new ccxt.binance({
-  apiKey: "bGSyeSb3FdIO3v4xxwadcfjKq598Hj6dOKXUSDquZi3VKvW3J07waiYq9Qtdw1IF",
-  secret: "BWHhLp94ZaVXZjUnqzuvtuHTJ1dw3xRLosxthDSzcVShv6JEh0rZAiGvYK3xYhqE",
-  enableRateLimit: true,
-  options: {
-    defaultType: 'future',
-    // defaultType: 'spot',
-  }
-});
+// const binanceClient = new ccxt.binance({
+//   apiKey: "bGSyeSb3FdIO3v4xxwadcfjKq598Hj6dOKXUsasasasSDquZi3VKvW3J07waiYq9Qtdw1IF",
+//   secret: "BWHhLp94ZaVXZjUnqzuvtuHTJ1sasadw3xRLosxthDSzcVShv6JEh0rZAiGvYK3xYhqE",
+//   enableRateLimit: true,
+//   options: {
+//     defaultType: 'future',
+//     // defaultType: 'spot',
+//   }
+// });
 
 /** Featch balance api */
 router.get('/fetchBalance', function (req, res) {
@@ -317,10 +317,10 @@ router.get('/fetchBalance', function (req, res) {
 // console.log ("binanceClient", (await binanceClient.fetchBalance()).info)
 
 
-const bybitClient = new ccxt.bybit({
-  apiKey: "NY1beO22gCmzJHJLGS",
-  secret: "HeKdJ16t6s6FbPxIdgEnowSpTPArMUlxBBRM"
-});
+// const bybitClient = new ccxt.bybit({
+//   apiKey: "NY1beO22gCmzJHJ121LGS",
+//   secret: "HeKdJ16t6s6FbPxId2121gEnowSpTPArMUlxBBRM"
+// });
 
 /*  -------------- Buy/SEll Api---------------      */
 
