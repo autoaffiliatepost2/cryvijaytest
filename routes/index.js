@@ -139,12 +139,13 @@ router.get('/historical-data', async function (req, res) {
 
         // Map the response to human-readable format
         const formattedData = ohlcv.map(data => ({
-          timestamp: data[0],
+          date: data[0].toString(),
           open: data[1],
           high: data[2],
           low: data[3],
           close: data[4],
-          volume: data[5],
+          vol: data[5],
+          oi:0
         }));
         return formattedData;
       },
@@ -153,7 +154,12 @@ router.get('/historical-data', async function (req, res) {
     res.send({
       status_api: 200,
       message: 'Bybit api token data fetch successfully',
-      data: bybitBalance,
+      data:{
+       "status":"success", 
+       "data":{
+        "candles" :bybitBalance
+       } 
+      } ,
     });
   } catch (err) {
     res.send({
