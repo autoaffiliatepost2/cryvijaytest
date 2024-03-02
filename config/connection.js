@@ -1,11 +1,11 @@
 var mysql  = require('mysql');
 
 var db_config = {
-    connectionLimit : 1,
-    host     : 'offerzoneindia.com',
-    user     : 'offerric_apadmin',
-    password : 'S@!E6a6a123',
-    database:'offerric_vijay'
+    connectionLimit : 2,
+    host     : 'bbxwargj32j7zcursnsy-mysql.services.clever-cloud.com',
+    user     : 'uwpwhqi2i0thlugr',
+    password : 't2sTgRrjhihHtwswna7P',
+    database:'bbxwargj32j7zcursnsy'
   };
 
 //- Create the connection variable
