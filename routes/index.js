@@ -181,7 +181,7 @@ router.get('/historical-data', async function (req, res) {
 router.get('/buySellApi', async function (req, res) {
   try {
     req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
-    if(req.query?.leverage){
+    if(req.query?.leverage && Number(req.query?.leverage) != 0){
       await bybitClient1.setLeverage(Number(req.query?.leverage),req.query?.instrument_token,{"marginMode": req.query?.margin_mode})
     }
     const bybitBalance = await async.waterfall([
