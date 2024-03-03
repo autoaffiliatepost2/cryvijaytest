@@ -61,10 +61,10 @@ const bybitClient1 = new ccxt.bybit({
 /** binance Featch balance api */
 router.get('/binanceFetchBalance', async function (req, res) {
   try {
-    req.query?.accountType === 'sport'? await binanceClient.load_time_difference() : await binanceClient1.load_time_difference();
+    req.query?.accountType === 'spot'? await binanceClient.load_time_difference() : await binanceClient1.load_time_difference();
     const binanceBalance = await async.waterfall([
       async function () {
-        return req.query?.accountType === 'sport'
+        return req.query?.accountType === 'spot'
           ? (await binanceClient.fetchBalance()).info
           : (await binanceClient1.fetchBalance()).info;
       },
@@ -108,10 +108,10 @@ function testServer(){
 /** bybit Featch balance api */
 router.get('/bybitFetchBalance', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const binanceBalance = await async.waterfall([
       async function () {
-        return req.query?.accountType === 'sport'
+        return req.query?.accountType === 'spot'
           ? (await bybitClient.fetchBalance()).info
           : (await bybitClient1.fetchBalance()).info;
       },
@@ -134,7 +134,7 @@ router.get('/bybitFetchBalance', async function (req, res) {
 /** bybit api token data */
 router.get('/historical-data', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
         const symbol = req.query?.symbol;
@@ -142,7 +142,7 @@ router.get('/historical-data', async function (req, res) {
         const limit = Number(req.query?.limit); // 30 days
 
         // Fetch OHLCV (Open/High/Low/Close/Volume) data
-        const ohlcv =  req.query?.accountType === 'sport' ? await bybitClient.fetchOHLCV(symbol, timeframe, undefined, limit) : await bybitClient1.fetchOHLCV(symbol, timeframe, undefined, limit);
+        const ohlcv =  req.query?.accountType === 'spot' ? await bybitClient.fetchOHLCV(symbol, timeframe, undefined, limit) : await bybitClient1.fetchOHLCV(symbol, timeframe, undefined, limit);
 
         // Map the response to human-readable format
         const formattedData = ohlcv.map(data => ({
@@ -180,7 +180,10 @@ router.get('/historical-data', async function (req, res) {
 /** bybit buy/sell data */
 router.get('/buySellApi', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    if(req.query?.leverage){
+      await bybitClient1.setLeverage(Number(req.query?.leverage),req.query?.instrument_token,{"marginMode": req.query?.margin_mode})
+    }
     const bybitBalance = await async.waterfall([
       async function () {
         let symbol = req.query?.instrument_token;
@@ -195,15 +198,16 @@ router.get('/buySellApi', async function (req, res) {
           let params = {
             stop_px: Number(req.query?.trigger_price),
             close_on_trigger: true,
-            marginMode: req.query?.margin_mode =='isolated' ? 'isolated' :'cross'
+            marginMode: req.query?.margin_mode
+            // marginMode: req.query?.margin_mode =='isolated' ? 'isolated' :'cross'
           };
-          order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
+          order =  req.query?.accountType === 'spot' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
         }else{
           let params = {
             marginMode: req.query?.margin_mode =='isolated' ? 'isolated' :'cross'
           };
-          order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
-          // order =  req.query?.accountType === 'sport' ? await bybitClient.createOrder(symbol, type, side, quantity, price) : await bybitClient1.createOrder(symbol, type, side, quantity, price);
+          order =  req.query?.accountType === 'spot' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
+          // order =  req.query?.accountType === 'spot' ? await bybitClient.createOrder(symbol, type, side, quantity, price) : await bybitClient1.createOrder(symbol, type, side, quantity, price);
         }
         
         return order;
@@ -227,12 +231,12 @@ router.get('/buySellApi', async function (req, res) {
 /** bybit singal token price data */
 router.get('/marketQuotesLTP', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
         const symbol = req.query?.instrument_key;
 
-        const order =  req.query?.accountType === 'sport' ? await bybitClient.fetchTicker(symbol) : await bybitClient1.fetchTicker(symbol);
+        const order =  req.query?.accountType === 'spot' ? await bybitClient.fetchTicker(symbol) : await bybitClient1.fetchTicker(symbol);
         return order;
       },
     ]);
@@ -254,11 +258,11 @@ router.get('/marketQuotesLTP', async function (req, res) {
 /** bybit singal token Cancel oreder data */
 router.get('/orderCancel', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
         const symbol = req.query?.instrument_key;
-        const openOrders = req.query?.accountType === 'sport' ? await bybitClient.fetchOpenOrders(symbol) : await bybitClient1.fetchOpenOrders(symbol);
+        const openOrders = req.query?.accountType === 'spot' ? await bybitClient.fetchOpenOrders(symbol) : await bybitClient1.fetchOpenOrders(symbol);
 
         if (openOrders.length === 0) {
           return 'No open orders to cancel.';
@@ -267,7 +271,7 @@ router.get('/orderCancel', async function (req, res) {
         // Cancel all open orders
         const canceledOrders = await Promise.all(
           openOrders.map(async order => {
-            const canceledOrder = req.query?.accountType === 'sport' ?  await bybitClient.cancelOrder(order.id, symbol) : await bybitClient1.cancelOrder(order.id, symbol);
+            const canceledOrder = req.query?.accountType === 'spot' ?  await bybitClient.cancelOrder(order.id, symbol) : await bybitClient1.cancelOrder(order.id, symbol);
             return canceledOrder;
           })
         );
@@ -292,11 +296,11 @@ router.get('/orderCancel', async function (req, res) {
 /** bybit Cancel all order token data */
 router.get('/cancelAllOrder', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
 
-        const openOrders = req.query?.accountType === 'sport' ?  await bybitClient.fetchOpenOrders() : await bybitClient1.fetchOpenOrders();
+        const openOrders = req.query?.accountType === 'spot' ?  await bybitClient.fetchOpenOrders() : await bybitClient1.fetchOpenOrders();
 
         if (openOrders.length === 0) {
           return 'No open orders to cancel.';
@@ -305,7 +309,7 @@ router.get('/cancelAllOrder', async function (req, res) {
         // Cancel all open orders
         const canceledOrders = await Promise.all(
           openOrders.map(async order => {
-            const canceledOrder = req.query?.accountType === 'sport' ?  await bybitClient.cancelOrder(order.id, symbol) : await bybitClient1.cancelOrder(order.id, symbol);
+            const canceledOrder = req.query?.accountType === 'spot' ?  await bybitClient.cancelOrder(order.id, symbol) : await bybitClient1.cancelOrder(order.id, symbol);
             return canceledOrder;
           })
         );
@@ -330,11 +334,11 @@ router.get('/cancelAllOrder', async function (req, res) {
 /** bybit  all open order token data */
 router.get('/openAllOrder', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
 
-        const openOrders = req.query?.accountType === 'sport' ?  await bybitClient.fetchOpenOrders() : await bybitClient1.fetchOpenOrders();
+        const openOrders = req.query?.accountType === 'spot' ?  await bybitClient.fetchOpenOrders() : await bybitClient1.fetchOpenOrders();
 
         if (openOrders.length === 0) {
           return 'No any open orders.';
@@ -361,12 +365,12 @@ router.get('/openAllOrder', async function (req, res) {
 /** bybit  single open order postition data */
 router.get('/openSingleOrderPostition', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
         const symbol = req.query?.instrument_key;
 
-        const openOrders = req.query?.accountType === 'sport' ?  await bybitClient.fetchPositions(symbol) : await bybitClient1.fetchPositions(symbol);
+        const openOrders = req.query?.accountType === 'spot' ?  await bybitClient.fetchPositions(symbol) : await bybitClient1.fetchPositions(symbol);
 
         if (openOrders.length === 0) {
           return 'No open orders postion.';
@@ -393,10 +397,10 @@ router.get('/openSingleOrderPostition', async function (req, res) {
 /** bybit  all open order postition data */
 router.get('/openAllOrderPostition', async function (req, res) {
   try {
-    req.query?.accountType === 'sport' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
-        const openOrders = req.query?.accountType === 'sport' ?  await bybitClient.fetchPositions() : await bybitClient1.fetchPositions();
+        const openOrders = req.query?.accountType === 'spot' ?  await bybitClient.fetchPositions() : await bybitClient1.fetchPositions();
 
         if (openOrders.length === 0) {
           return 'No open orders postion.';
@@ -409,6 +413,32 @@ router.get('/openAllOrderPostition', async function (req, res) {
     res.send({
       status_api: 200,
       message: 'Bybit token all open order position successfully',
+      data: bybitBalance,
+    });
+  } catch (err) {
+    res.send({
+      status_api: err.code ? err.code : 400,
+      message: (err && err.message) || 'Something went wrong',
+      data: err.data ? err.data : null,
+    });
+  }
+});
+
+/** bybit  setLeverage order postition data */
+router.get('/setLeverage', async function (req, res) {
+  try {
+    await bybitClient1.load_time_difference();
+    const bybitBalance = await async.waterfall([
+      async function () {
+        const setLeverageData =  await bybitClient1.setLeverage(1,'GMT/USDT:USDT',{"marginMode": "cross"});
+
+       return setLeverageData;
+      },
+    ]);
+    await teleStockMsg("Bybit token setLeverage  successfully");
+    res.send({
+      status_api: 200,
+      message: 'Bybit token setLeverage successfully',
       data: bybitBalance,
     });
   } catch (err) {
