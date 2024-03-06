@@ -187,8 +187,8 @@ router.get('/buySellApi', async function (req, res) {
       await bybitClient1.setLeverage(Number(req.query?.leverage),req.query?.instrument_token,{"marginMode": req.query?.margin_mode})
     }
     let openOrderQty;
-    if(req.query?.position_size && Number(req.query?.position_size) != 0){
-     let openOrdersData = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(instrument_token) : await bybitClient1.fetchPosition(instrument_token);
+    if(req.query?.position_size && (Number(req.query?.position_size) != 0)){
+     let openOrdersData = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(req.query?.instrument_token) : await bybitClient1.fetchPosition(req.query?.instrument_token);
      openOrderQty = Number(req.query?.position_size) + Number(openOrdersData.contracts);
     }else{
       openOrderQty = Number(req.query?.quantity);
