@@ -188,10 +188,10 @@ router.get('/buySellApi', async function (req, res) {
     }
     let openOrderQty;
     if(req.query?.position_size && Number(req.query?.position_size) != 0){
-     let openOrdersData = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(symbol) : await bybitClient1.fetchPosition(symbol);
+     let openOrdersData = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(instrument_token) : await bybitClient1.fetchPosition(instrument_token);
      openOrderQty = Number(req.query?.position_size) + Number(openOrdersData.contracts);
     }else{
-      openOrderQty = req.query?.quantity;
+      openOrderQty = Number(req.query?.quantity);
     }
     const bybitBalance = await async.waterfall([
       async function () {
