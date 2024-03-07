@@ -13,6 +13,7 @@
     "axios": "^0.19.2",
     "bitly": "^7.0.1",
     "body-parser": "^1.19.0",
+    "bybit-api": "^3.9.6",
     "ccxt": "4.2.51",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",

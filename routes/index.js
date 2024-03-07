@@ -13,9 +13,17 @@ var config = require('../config/global');
 // Import required modules
 const ccxt = require ('ccxt');
 const fs = require('fs');
+const { RestClientV5 } = require('bybit-api');
+
 /* GET home page. */
 router.get('/', function (req, res, next) {
   res.send('respond with a resource');
+});
+
+const client = new RestClientV5({
+  testnet: false,
+  key: config.byKey,
+  secret: config.bySecret,
 });
 
 const binanceClient = new ccxt.binance({
@@ -56,6 +64,54 @@ const bybitClient1 = new ccxt.bybit({
     'adjustForTimeDifference': true,
     defaultType: 'future',
   }
+});
+
+/** Order modify apis */
+router.get('/setTradingStopApi', function (req, res) {
+  async.waterfall([
+    function (nextCall) {
+      client.setTradingStop({
+              category: 'linear',
+              symbol: 'SLPUSDT',
+              takeProfit: '0.006437',
+              stopLoss: '0',
+              tpTriggerBy: 'MarkPrice',
+              // slTriggerBy: 'IndexPrice',
+              tpslMode: 'Partial',
+              tpOrderType: 'Limit',
+              // slOrderType: 'Limit',
+              tpSize: '10',
+              // slSize: '50',
+              tpLimitPrice: '0.006437',
+              // slLimitPrice: '0.21',
+              positionIdx: 0,
+          })
+          .then((response) => {
+              console.log(response);
+              nextCall(null, response);
+          })
+          .catch((error) => {
+              console.error(error);
+              return nextCall({
+                "message": "something went wrong",
+                "data": null
+              });
+          });
+    },
+  ], function (err, response) {
+    if (err) {
+      return res.send({
+        status_api: err.code ? err.code : 400,
+        message: (err && err.message) || "someyhing went wrong",
+        data: err.data ? err.data : null
+      });
+    }
+    return res.send({
+      status_api: 200,
+      message: "Order modify apis successfully",
+      data: response
+    });
+  });
 });
 
 /** binance Featch balance api */
@@ -203,23 +259,47 @@ router.get('/buySellApi', async function (req, res) {
 
         // Fetch OHLCV (Open/High/Low/Close/Volume) data
         let order;
-        if(req.query?.trigger_price){
+        if(req.query?.sl_price){
           let params = {
-            stop_px: Number(req.query?.trigger_price),
-            close_on_trigger: true,
+            'stopLoss': {
+              'type': 'limit', // or 'market', this field is not necessary if limit price is specified
+              'triggerPrice': req.query?.sl_price,
+            },
             marginMode: req.query?.margin_mode
             // marginMode: req.query?.margin_mode =='isolated' ? 'isolated' :'cross'
           };
           order =  req.query?.accountType === 'spot' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
         }else{
           let params = {
-            marginMode: req.query?.margin_mode
+            marginMode: req.query?.margin_mode,
+            tpslMode:'partial'
           };
           order =  req.query?.accountType === 'spot' ? await bybitClient.createOrder(symbol, type, side, quantity, price, params) : await bybitClient1.createOrder(symbol, type, side, quantity, price, params);
           // order =  req.query?.accountType === 'spot' ? await bybitClient.createOrder(symbol, type, side, quantity, price) : await bybitClient1.createOrder(symbol, type, side, quantity, price);
         }
         
-        return order;
+        if(req.query?.tp_price && req.query?.tp_qty){
+          const array1 = req.query?.tp_price.split(',');
+          const array2 = req.query?.tp_qty.split(',');
+          let finalSymbol = req.query?.instrument_token.replace("/USDT:USDT", 'USDT');
+  
+          const resultArray = array1.slice(0, Math.min(array1.length, array2.length)).map((price, index) => {
+            const qty = array2[index];
+            return { qty, price };
+          });
+          await Promise.all(resultArray.map(item => setTradingStop(item,finalSymbol)))
+            .then((responses) => {
+               return order;
+            })
+            .catch((error) => {
+              return nextCall({
+                "message": "something went wrong",
+                "data": null
+              });
+            })
+        }else{
+          return order;
+        }
       },
     ]);
     await teleStockMsg("Bybit api buy/sell api featch successfully");
@@ -237,6 +317,21 @@ router.get('/buySellApi', async function (req, res) {
     });
   }
 });
+
+async function setTradingStop(item,symbol) {
+  return client.setTradingStop({
+    category: 'linear',
+    symbol: symbol,
+    takeProfit: item.price,
+    stopLoss: '0',
+    tpTriggerBy: 'MarkPrice',
+    tpslMode: 'Partial',
+    tpOrderType: 'Limit',
+    tpSize: item.qty,
+    tpLimitPrice: item.price,
+    positionIdx: 0,
+  });
+}
 
 /** bybit singal token price data */
 router.get('/marketQuotesLTP', async function (req, res) {
