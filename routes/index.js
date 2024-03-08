@@ -259,7 +259,7 @@ router.get('/buySellApi', async function (req, res) {
 
         // Fetch OHLCV (Open/High/Low/Close/Volume) data
         let order;
-        if(req.query?.sl_price){
+        if(req.query?.sl_price && (Number(req.query?.sl_price) != 0)){
           let params = {
             'stopLoss': {
               'type': 'limit', // or 'market', this field is not necessary if limit price is specified
