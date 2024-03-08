@@ -503,6 +503,38 @@ router.get('/openSingleOrderPostition', async function (req, res) {
   }
 });
 
+/** bybit  single open order postition data */
+router.get('/allOrderHistory', async function (req, res) {
+  try {
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
+    const bybitBalance = await async.waterfall([
+      async function () {
+        const symbol = req.query?.instrument_key;
+
+        const openOrders = req.query?.accountType === 'spot' ?  await bybitClient.fetchTrades(symbol) : await bybitClient1.fetchTrades(symbol);
+
+        if (openOrders.length === 0) {
+          return 'No open orders postion.';
+        }
+
+       return openOrders;
+      },
+    ]);
+    res.send({
+      status_api: 200,
+      message: 'Bybit token single open order position successfully',
+      data: bybitBalance,
+    });
+  } catch (err) {
+    await teleStockMsg("---> Bybit token single open order position failed");
+    res.send({
+      status_api: err.code ? err.code : 400,
+      message: (err && err.message) || 'Something went wrong',
+      data: err.data ? err.data : null,
+    });
+  }
+});
+
 /** bybit  all open order postition data */
 router.get('/openAllOrderPostition', async function (req, res) {
   try {
