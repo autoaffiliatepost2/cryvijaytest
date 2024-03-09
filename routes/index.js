@@ -281,12 +281,18 @@ router.get('/buySellApi', async function (req, res) {
         if(req.query?.tp_price && req.query?.tp_qty){
           const array1 = req.query?.tp_price.split(',');
           const array2 = req.query?.tp_qty.split(',');
+          const array3 = req.query?.tp_sl.split(',');
           let finalSymbol = req.query?.instrument_token.replace("/USDT:USDT", 'USDT');
-  
-          const resultArray = array1.slice(0, Math.min(array1.length, array2.length)).map((price, index) => {
+
+          const resultArray = array1.slice(0, Math.min(array1.length, array2.length, array3.length)).map((price, index) => {
             const qty = array2[index];
-            return { qty, price };
+            const sl = array3[index];
+            return { qty, price, sl };
           });
+          // const resultArray = array1.slice(0, Math.min(array1.length, array2.length)).map((price, index) => {
+          //   const qty = array2[index];
+          //   return { qty, price };
+          // });
           await Promise.all(resultArray.map(item => setTradingStop(item,finalSymbol)))
             .then((responses) => {
                return order;
@@ -323,12 +329,16 @@ async function setTradingStop(item,symbol) {
     category: 'linear',
     symbol: symbol,
     takeProfit: item.price,
-    stopLoss: '0',
+    stopLoss: item.sl,
     tpTriggerBy: 'MarkPrice',
+    slTriggerBy: 'MarkPrice',
     tpslMode: 'Partial',
     tpOrderType: 'Limit',
+    slOrderType: 'Limit',
     tpSize: item.qty,
+    slSize: item.qty,
     tpLimitPrice: item.price,
+    slLimitPrice: item.sl,
     positionIdx: 0,
   });
 }
