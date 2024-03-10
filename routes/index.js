@@ -511,7 +511,7 @@ router.get('/openSingleOrderPostition', async function (req, res) {
     req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
-        const symbol = req.query?.instrument_key;
+        const symbol = req.query?.instrument_token;
 
         const openOrders = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(symbol) : await bybitClient1.fetchPosition(symbol);
 
@@ -538,12 +538,12 @@ router.get('/openSingleOrderPostition', async function (req, res) {
 });
 
 /** bybit  single open order postition data */
-router.get('/allOrderHistory', async function (req, res) {
+router.get('/allOrderHistory123', async function (req, res) {
   try {
     req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const bybitBalance = await async.waterfall([
       async function () {
-        const symbol = req.query?.instrument_key;
+        const symbol = req.query?.instrument_token;
 
         const openOrders = req.query?.accountType === 'spot' ?  await bybitClient.fetchTrades(symbol) : await bybitClient1.fetchTrades(symbol);
 
