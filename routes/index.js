@@ -243,12 +243,14 @@ router.get('/buySellApi', async function (req, res) {
       await bybitClient1.setLeverage(Number(req.query?.leverage),req.query?.instrument_token,{"marginMode": req.query?.margin_mode})
     }
     let openOrderQty;
+    let openOrdersData = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(req.query?.instrument_token) : await bybitClient1.fetchPosition(req.query?.instrument_token);
+    let positionDirection = openOrdersData.info.side;
     if(req.query?.position_size && (Number(req.query?.position_size) != 0)){
-     let openOrdersData = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(req.query?.instrument_token) : await bybitClient1.fetchPosition(req.query?.instrument_token);
-     openOrderQty = Number(req.query?.position_size) + Number(openOrdersData.contracts);
+      openOrderQty = Number(req.query?.position_size) + Number(openOrdersData.contracts);
     }else{
       openOrderQty = Number(req.query?.quantity);
     }
+   if(positionDirection != req.query?.transaction_type){
     const bybitBalance = await async.waterfall([
       async function () {
         let symbol = req.query?.instrument_token;
@@ -318,6 +320,14 @@ router.get('/buySellApi', async function (req, res) {
       message: 'Bybit api buy/sell api featch successfully',
       data: bybitBalance,
     });
+  }else{
+    await teleStockMsg("Bybit api buy/sell api fire but not order");
+    res.send({
+      status_api: 200,
+      message: 'Bybit api buy/sell api fire but not order',
+      data: '',
+    });
+  }
   } catch (err) {
     await teleStockMsg("---> Bybit api buy/sell api featch failed");
     res.send({
