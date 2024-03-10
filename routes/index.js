@@ -250,7 +250,7 @@ router.get('/buySellApi', async function (req, res) {
     }else{
       openOrderQty = Number(req.query?.quantity);
     }
-   if(positionDirection != req.query?.transaction_type){
+   if(positionDirection.toLowerCase() != req.query?.transaction_type){
     const bybitBalance = await async.waterfall([
       async function () {
         let symbol = req.query?.instrument_token;
