@@ -279,20 +279,24 @@ router.get('/buySellApi', async function (req, res) {
         }
         
         if(req.query?.tp_price && req.query?.tp_qty){
+          let openOrderGet= req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(req.query?.instrument_token) : await bybitClient1.fetchPosition(req.query?.instrument_token);
+          let entryPrice = Number(openOrderGet.entryPrice);
           const array1 = req.query?.tp_price.split(',');
           const array2 = req.query?.tp_qty.split(',');
           const array3 = req.query?.tp_sl.split(',');
           let finalSymbol = req.query?.instrument_token.replace("/USDT:USDT", 'USDT');
 
-          const resultArray = array1.slice(0, Math.min(array1.length, array2.length, array3.length)).map((price, index) => {
-            const qty = array2[index];
-            const sl = array3[index];
+          // const resultArray = array1.slice(0, Math.min(array1.length, array2.length, array3.length)).map((price, index) => {
+          //   const qty = array2[index];
+          //   const sl = array3[index];
+          //   return { qty, price, sl };
+          // });
+          const resultArray = array1.slice(0, Math.min(array1.length, array2.length, array3.length)).map((_, index) => {
+            const price = side=='buy' ? calculateBuyTPSL(entryPrice,array1[index]) :  calculateSellTPSL(entryPrice,array1[index]);
+            const qty = array2[index]
+            const sl = side=='buy' ?  calculateBuyTPSL(entryPrice,array3[index]) :  calculateSellTPSL(entryPrice,array3[index]);
             return { qty, price, sl };
           });
-          // const resultArray = array1.slice(0, Math.min(array1.length, array2.length)).map((price, index) => {
-          //   const qty = array2[index];
-          //   return { qty, price };
-          // });
           await Promise.all(resultArray.map(item => setTradingStop(item,finalSymbol)))
             .then((responses) => {
                return order;
@@ -328,8 +332,8 @@ async function setTradingStop(item,symbol) {
   return client.setTradingStop({
     category: 'linear',
     symbol: symbol,
-    takeProfit: item.price,
-    stopLoss: item.sl,
+    takeProfit: Number(item.price).toFixed(6),
+    stopLoss: Number(item.sl).toFixed(6),
     tpTriggerBy: 'MarkPrice',
     slTriggerBy: 'MarkPrice',
     tpslMode: 'Partial',
@@ -337,10 +341,20 @@ async function setTradingStop(item,symbol) {
     slOrderType: 'Limit',
     tpSize: item.qty,
     slSize: item.qty,
-    tpLimitPrice: item.price,
-    slLimitPrice: item.sl,
+    tpLimitPrice: Number(item.price).toFixed(6),
+    slLimitPrice: Number(item.sl).toFixed(6),
     positionIdx: 0,
   });
+}
+
+function calculateBuyTPSL(entryPrice, Percentage) {
+  const getPrice = Number(entryPrice) + (Number(entryPrice) * Number(Percentage) / 100);
+  return getPrice;
+}
+
+function calculateSellTPSL(entryPrice, Percentage) {
+  const getPrice = Number(entryPrice) - (Number(entryPrice) * Number(Percentage) / 100);
+  return getPrice;
 }
 
 /** bybit singal token price data */
