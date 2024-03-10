@@ -627,6 +627,62 @@ router.get('/setLeverage', async function (req, res) {
   }
 });
 
+router.get('/allOrderHistory', async (req, res) => {
+  try {
+    const response = await client.getClosedPnL({
+        category: 'linear',
+        symbol: req.query?.instrument_token,
+        limit:100,
+        startTime:moment(req.query?.date).valueOf(),
+        endTime:moment(req.query?.date).endOf('day').valueOf()
+    });
+
+    const allData = await getNextTrend(req, response.result.list, response.result.nextPageCursor);
+
+    return res.send({
+      status_api: 200,
+      message: 'Order history data fetch successfully',
+      data: allData,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.send({
+      status_api: error.code ? error.code : 400,
+      message: (error && error.message) || 'Something went wrong',
+      data: error.data ? error.data : null,
+    });
+  }
+});
+
+async function getNextTrend(req, data, cursor) {
+  try {
+    let allData = [...data];
+
+    if (cursor) {
+      const response = await client.getClosedPnL({
+        category: 'linear',
+        symbol: req.query?.instrument_token,
+        cursor:cursor,
+        limit: 100,
+        startTime: moment(req.query?.date).valueOf(),
+        endTime: moment(req.query?.date).endOf('day').valueOf(),
+      });
+
+      allData = allData.concat(response.result.list);
+
+      if (response.result.list > 0 && response.result.nextPageCursor) {
+        return await getNextTrend(req, allData, response.result.nextPageCursor);
+      }
+    }
+
+    return allData;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
 function teleStockMsg(msg) {
   bot = new nodeTelegramBotApi(config.token);
   bot.sendMessage(config.channelId, "## "+msg, {
