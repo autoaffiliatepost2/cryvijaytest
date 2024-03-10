@@ -629,6 +629,7 @@ router.get('/setLeverage', async function (req, res) {
 
 router.get('/allOrderHistory', async (req, res) => {
   try {
+    req.query?.accountType === 'spot' ? await bybitClient.load_time_difference() : await bybitClient1.load_time_difference();
     const response = await client.getClosedPnL({
         category: 'linear',
         symbol: req.query?.instrument_token,
@@ -682,6 +683,28 @@ async function getNextTrend(req, data, cursor) {
     throw error;
   }
 }
+
+/** bybit symbol data */
+router.get('/symbolData', async function (req, res) {
+  try {
+    await bybitClient1.load_time_difference();
+    // Get market symbols and quantities
+    const symbolsAndQuantities =  await bybitClient1.loadMarkets();
+
+    res.send({
+      status_api: 200,
+      message: 'Bybit token single open order position successfully',
+      data: symbolsAndQuantities,
+    });
+  } catch (err) {
+    await teleStockMsg("---> Bybit token single open order position failed");
+    res.send({
+      status_api: err.code ? err.code : 400,
+      message: (err && err.message) || 'Something went wrong',
+      data: err.data ? err.data : null,
+    });
+  }
+});
 
 function teleStockMsg(msg) {
   bot = new nodeTelegramBotApi(config.token);
