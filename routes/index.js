@@ -242,6 +242,7 @@ router.get('/buySellApi', async function (req, res) {
     if(req.query?.leverage && Number(req.query?.leverage) != 0){
       await bybitClient1.setLeverage(Number(req.query?.leverage),req.query?.instrument_token,{"marginMode": req.query?.margin_mode})
     }
+    let finalDateTime =  moment.tz('Asia/Kolkata').format('DD-MM-YYYY HH:mm ss:SSS');
     let openOrderQty;
     let openOrdersData = req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(req.query?.instrument_token) : await bybitClient1.fetchPosition(req.query?.instrument_token);
     let positionDirection = openOrdersData.info.side;
@@ -282,6 +283,7 @@ router.get('/buySellApi', async function (req, res) {
         
         if(req.query?.tp_price && req.query?.tp_qty){
           let openOrderGet= req.query?.accountType === 'spot' ?  await bybitClient.fetchPosition(req.query?.instrument_token) : await bybitClient1.fetchPosition(req.query?.instrument_token);
+          console.log('openOrderGet: ', openOrderGet);
           let entryPrice = Number(openOrderGet.entryPrice);
           const array1 = req.query?.tp_price.split(',');
           const array2 = req.query?.tp_qty.split(',');
@@ -301,6 +303,8 @@ router.get('/buySellApi', async function (req, res) {
           });
           await Promise.all(resultArray.map(item => setTradingStop(item,finalSymbol)))
             .then((responses) => {
+              console.log('responses: ', responses);
+              console.log('order: ', order);
                return order;
             })
             .catch((error) => {
@@ -309,6 +313,23 @@ router.get('/buySellApi', async function (req, res) {
                 "data": null
               });
             })
+            let html = '<b>Account Id : </b> Jigar <b>[Bybit]</b> \n\n' +
+            '🔀 <b>Direction : </b> <b> ' + req.query.transaction_type + '</b>'+(req.query.transaction_type == 'buy'? '🟢' : '🔴')+'\n' +
+            '🌐 <b>Script : </b> ' + req.query.instrument_token + '\n' +
+            '💰 <b>Price : ₹</b> ' + req.query.price + '\n' +
+            '🚫 <b>Qty : </b> ' + openOrderQty + '\n' +
+            '📈 <b>Mode : </b> ' + req.query.order_type + '\n' +
+            '🕙 <b>Trade Time : </b> ' + finalDateTime + '\n' +
+            '📕 <b> TP1 EntryPrice: </b> ' + Number(resultArray[0].price).toFixed(6) + '\n' +
+            '📕 <b> TP1 qty: </b> ' + resultArray[0].qty + '\n' +
+            '📕 <b> TP1 sl: </b> ' + Number(resultArray[0].sl).toFixed(6) + '\n' +
+            '📒 <b> TP2 EntryPrice: </b> ' + Number(resultArray[1].price).toFixed(6) + '\n' +
+            '📒 <b> TP2 qty: </b> ' + resultArray[1].qty + '\n' +
+            '📒 <b> TP2 sl: </b> ' + Number(resultArray[1].sl).toFixed(6) + '\n' +
+            '📗 <b> TP3 EntryPrice: </b> ' + Number(resultArray[2].price).toFixed(6) + '\n' +
+            '📗 <b> TP3 qty: </b> ' + resultArray[2].qty + '\n' +
+            '📗 <b> TP3 sl: </b> ' + Number(resultArray[2].sl).toFixed(6) + '\n' ;
+            await teleAnotherStockMsg(html);
         }else{
           return order;
         }
@@ -709,6 +730,14 @@ router.get('/symbolData', async function (req, res) {
 function teleStockMsg(msg) {
   bot = new nodeTelegramBotApi(config.token);
   bot.sendMessage(config.channelId, "## "+msg, {
+    parse_mode: "HTML",
+    disable_web_page_preview: true
+  })
+}
+
+function teleAnotherStockMsg(msg) {
+  bot = new nodeTelegramBotApi(config.token);
+  bot.sendMessage(config.channelId2, "→ "+msg, {
     parse_mode: "HTML",
     disable_web_page_preview: true
   })
