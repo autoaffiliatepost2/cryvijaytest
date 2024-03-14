@@ -146,7 +146,7 @@ setInterval(function setup() {
   connection.query(sqlsss, async function (err, appData) {
     console.log('appData: ', appData);
     if (err) {
-      await logUser("App data fetch api failed");
+      console.log('err: ', err);
     } else {
       testServer();
     }
@@ -319,16 +319,23 @@ router.get('/buySellApi', async function (req, res) {
             '💰 <b>Price : ₹</b> ' + req.query.price + '\n' +
             '🚫 <b>Qty : </b> ' + openOrderQty + '\n' +
             '📈 <b>Mode : </b> ' + req.query.order_type + '\n' +
-            '🕙 <b>Trade Time : </b> ' + finalDateTime + '\n' +
-            '📕 <b> TP1 EntryPrice: </b> ' + Number(resultArray[0].price).toFixed(6) + '\n' +
-            '📕 <b> TP1 qty: </b> ' + resultArray[0].qty + '\n' +
-            '📕 <b> TP1 sl: </b> ' + Number(resultArray[0].sl).toFixed(6) + '\n' +
-            '📒 <b> TP2 EntryPrice: </b> ' + Number(resultArray[1].price).toFixed(6) + '\n' +
-            '📒 <b> TP2 qty: </b> ' + resultArray[1].qty + '\n' +
-            '📒 <b> TP2 sl: </b> ' + Number(resultArray[1].sl).toFixed(6) + '\n' +
-            '📗 <b> TP3 EntryPrice: </b> ' + Number(resultArray[2].price).toFixed(6) + '\n' +
-            '📗 <b> TP3 qty: </b> ' + resultArray[2].qty + '\n' +
-            '📗 <b> TP3 sl: </b> ' + Number(resultArray[2].sl).toFixed(6) + '\n' ;
+            '🕙 <b>Trade Time : </b> ' + finalDateTime + '\n' ;
+            
+            for (let i = 0; i < resultArray.length; i++) {
+              const entry = resultArray[i];
+              const tpNumber = i + 1;  // TP1, TP2, TP3, etc.
+              let bookIcon = '';
+              if (tpNumber == 1) {
+                  bookIcon = '📕'; 
+              }else if (tpNumber == 2) {
+                  bookIcon = '📒';  
+              } else {
+                  bookIcon = '📗';  // Use a different icon for sl <= 0.005
+              }
+              html += `${bookIcon} <b> TP${tpNumber} EntryPrice: </b> ${Number(entry.price).toFixed(6)}\n` +
+                      `${bookIcon} <b> TP${tpNumber} qty: </b> ${entry.qty}\n` +
+                      `${bookIcon} <b> TP${tpNumber} sl: </b> ${Number(entry.sl).toFixed(6)}\n`;
+            }
             await teleAnotherStockMsg(html);
         }else{
           return order;
